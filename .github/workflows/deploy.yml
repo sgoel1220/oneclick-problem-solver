@@ -46,6 +46,8 @@ jobs:
         npm run build
         echo "Build completed. Checking dist folder:"
         ls -la dist/
+        echo "Checking index.html content:"
+        cat dist/index.html
       env:
         VITE_OPENROUTER_API_KEY: ${{ secrets.VITE_OPENROUTER_API_KEY }}
 

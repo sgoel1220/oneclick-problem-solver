@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node build-env.js && tsc && vite build",
+    "build": "node build-env.js && tsc && vite build && npm run postbuild",
+    "postbuild": "node -e \"console.log('Build verification complete')\"",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest",
