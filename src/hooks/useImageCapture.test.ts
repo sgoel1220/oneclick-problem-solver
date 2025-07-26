@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useImageCapture } from './useImageCapture'
 
 // Mock canvas and context
@@ -9,20 +9,23 @@ const mockGetContext = vi.fn(() => ({
   drawImage: mockDrawImage
 }))
 
+const mockCanvas = {
+  getContext: mockGetContext,
+  toDataURL: mockToDataURL,
+  width: 0,
+  height: 0
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   
   // Mock createElement for canvas
+  const originalCreateElement = document.createElement.bind(document)
   vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
     if (tagName === 'canvas') {
-      return {
-        getContext: mockGetContext,
-        toDataURL: mockToDataURL,
-        width: 0,
-        height: 0
-      } as unknown as HTMLCanvasElement
+      return mockCanvas as unknown as HTMLCanvasElement
     }
-    return document.createElement(tagName)
+    return originalCreateElement(tagName)
   })
 })
 

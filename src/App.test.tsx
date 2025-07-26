@@ -6,8 +6,8 @@ describe('App', () => {
   it('renders the main application with two-pane layout', () => {
     render(<App />)
     
-    // Should have a solve problem button
-    expect(screen.getByRole('button', { name: /solve problem/i })).toBeInTheDocument()
+    // Should have enable camera button (initial state)
+    expect(screen.getByRole('button', { name: /enable camera/i })).toBeInTheDocument()
     
     // Should have answer display area
     expect(screen.getByTestId('answer-display')).toBeInTheDocument()

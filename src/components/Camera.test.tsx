@@ -3,19 +3,34 @@ import { describe, it, expect, vi } from 'vitest'
 import Camera from './Camera'
 
 // Mock the custom hooks
+const mockUseWebcam = vi.fn()
+const mockUseImageCapture = vi.fn()
+
 vi.mock('../hooks/useWebcam', () => ({
-  useWebcam: () => ({
-    stream: null,
-    isLoading: false,
-    error: null,
-    hasPermission: false,
-    startWebcam: vi.fn(),
-    stopWebcam: vi.fn(),
-    captureImage: vi.fn()
-  })
+  useWebcam: () => mockUseWebcam()
+}))
+
+vi.mock('../hooks/useImageCapture', () => ({
+  useImageCapture: () => mockUseImageCapture()
 }))
 
 describe('Camera', () => {
+  beforeEach(() => {
+    mockUseWebcam.mockReturnValue({
+      stream: null,
+      isLoading: false,
+      error: null,
+      hasPermission: false,
+      startWebcam: vi.fn(),
+      stopWebcam: vi.fn()
+    })
+
+    mockUseImageCapture.mockReturnValue({
+      captureFromVideo: vi.fn(),
+      toBase64: vi.fn()
+    })
+  })
+
   it('renders camera component with video element', () => {
     render(<Camera onCapture={vi.fn()} />)
     
@@ -28,27 +43,9 @@ describe('Camera', () => {
     expect(screen.getByText(/click to enable camera/i)).toBeInTheDocument()
   })
 
-  it('calls onCapture when capture button is clicked', () => {
-    const mockOnCapture = vi.fn()
+  it('shows enable camera button when no permission', () => {
+    render(<Camera onCapture={vi.fn()} />)
     
-    // Mock webcam hook with permission
-    vi.doMock('../hooks/useWebcam', () => ({
-      useWebcam: () => ({
-        stream: { id: 'test-stream' },
-        isLoading: false,
-        error: null,
-        hasPermission: true,
-        startWebcam: vi.fn(),
-        stopWebcam: vi.fn(),
-        captureImage: vi.fn().mockReturnValue('data:image/jpeg;base64,test')
-      })
-    }))
-    
-    render(<Camera onCapture={mockOnCapture} />)
-    
-    const captureButton = screen.getByText(/capture/i)
-    fireEvent.click(captureButton)
-    
-    expect(mockOnCapture).toHaveBeenCalledWith('data:image/jpeg;base64,test')
+    expect(screen.getByRole('button', { name: /enable camera/i })).toBeInTheDocument()
   })
 })

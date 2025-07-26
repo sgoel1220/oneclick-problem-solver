@@ -4,8 +4,12 @@ import { solveProblem } from './openrouter'
 // Mock fetch
 global.fetch = vi.fn()
 
+// Mock console.error to avoid noise in test output
+const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
 beforeEach(() => {
   vi.clearAllMocks()
+  consoleSpy.mockClear()
 })
 
 describe('OpenRouter Service', () => {

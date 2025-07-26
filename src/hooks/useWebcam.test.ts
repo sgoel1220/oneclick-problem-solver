@@ -4,8 +4,9 @@ import { useWebcam } from './useWebcam'
 
 // Mock getUserMedia
 const mockGetUserMedia = vi.fn()
+const mockStop = vi.fn()
 const mockVideoStream = {
-  getTracks: vi.fn(() => [{ stop: vi.fn() }])
+  getTracks: vi.fn(() => [{ stop: mockStop }])
 }
 
 beforeEach(() => {
@@ -74,7 +75,7 @@ describe('useWebcam', () => {
       result.current.stopWebcam()
     })
     
-    expect(mockVideoStream.getTracks()[0].stop).toHaveBeenCalled()
+    expect(mockStop).toHaveBeenCalled()
     expect(result.current.stream).toBeNull()
     expect(result.current.hasPermission).toBe(false)
   })
