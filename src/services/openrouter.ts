@@ -14,9 +14,12 @@ const PROBLEM_SOLVING_PROMPT = `You will receive an image containing a problem s
 Example format:  
 "Answer: 42"`
 
-export async function solveProblem(base64Image: string): Promise<string> {
+export async function solveProblem(base64Image: string, apiKey?: string): Promise<string> {
+  // Use provided API key or fall back to environment variable
+  const key = apiKey || API_KEY
+  
   // Check API key before making request
-  if (!API_KEY) {
+  if (!key) {
     throw new Error('OpenRouter API key not configured. Please set VITE_OPENROUTER_API_KEY environment variable.')
   }
 
@@ -24,7 +27,7 @@ export async function solveProblem(base64Image: string): Promise<string> {
     const response = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${API_KEY}`,
+        'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

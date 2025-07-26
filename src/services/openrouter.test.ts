@@ -4,15 +4,25 @@ import { solveProblem } from './openrouter'
 // Mock fetch
 global.fetch = vi.fn()
 
-// Mock console.error to avoid noise in test output
+// Mock console.error and console.warn to avoid noise in test output
 const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
 beforeEach(() => {
   vi.clearAllMocks()
   consoleSpy.mockClear()
+  consoleWarnSpy.mockClear()
 })
 
 describe('OpenRouter Service', () => {
+  const testApiKey = 'test-api-key-for-testing'
+
+  it('should throw error when API key is not provided and env var is missing', async () => {
+    const base64Image = 'test-base64-image'
+    
+    await expect(solveProblem(base64Image)).rejects.toThrow('OpenRouter API key not configured')
+  })
+
   it('should send image to OpenRouter API and return answer', async () => {
     const mockResponse = {
       ok: true,
@@ -28,14 +38,14 @@ describe('OpenRouter Service', () => {
     ;(global.fetch as any).mockResolvedValue(mockResponse)
     
     const base64Image = 'test-base64-image'
-    const result = await solveProblem(base64Image)
+    const result = await solveProblem(base64Image, testApiKey)
     
     expect(fetch).toHaveBeenCalledWith(
       'https://openrouter.ai/api/v1/chat/completions',
       expect.objectContaining({
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer test-api-key',
+          'Authorization': `Bearer ${testApiKey}`,
           'Content-Type': 'application/json'
         },
         body: expect.stringContaining(base64Image)
@@ -56,7 +66,7 @@ describe('OpenRouter Service', () => {
     
     const base64Image = 'test-base64-image'
     
-    await expect(solveProblem(base64Image)).rejects.toThrow('API request failed: 401 Unauthorized')
+    await expect(solveProblem(base64Image, testApiKey)).rejects.toThrow('API request failed: 401 Unauthorized')
   })
 
   it('should handle network errors', async () => {
@@ -64,7 +74,7 @@ describe('OpenRouter Service', () => {
     
     const base64Image = 'test-base64-image'
     
-    await expect(solveProblem(base64Image)).rejects.toThrow('Network error')
+    await expect(solveProblem(base64Image, testApiKey)).rejects.toThrow('Network error')
   })
 
   it('should extract answer from various response formats', async () => {
@@ -82,7 +92,7 @@ describe('OpenRouter Service', () => {
     ;(global.fetch as any).mockResolvedValue(mockResponse)
     
     const base64Image = 'test-base64-image'
-    const result = await solveProblem(base64Image)
+    const result = await solveProblem(base64Image, testApiKey)
     
     expect(result).toBe('The answer is 25 because 5 squared equals 25.')
   })
