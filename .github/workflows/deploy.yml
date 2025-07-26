@@ -1,9 +1,7 @@
-name: Deploy to GitHub Pages
+name: Deploy Static Site
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
 
 permissions:
@@ -16,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -26,42 +24,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Run tests
-      run: npm run test
-
-    - name: Build
-      run: |
-        echo "Building with environment variables..."
-        echo "Repository: $GITHUB_REPOSITORY"
-        echo "API Key configured: $([ -n "$VITE_OPENROUTER_API_KEY" ] && echo "YES" || echo "NO")"
-        npm run build
-        echo "Build completed. Checking dist folder:"
-        ls -la dist/
-        echo "Checking index.html content:"
-        cat dist/index.html
-      env:
-        VITE_OPENROUTER_API_KEY: ${{ secrets.VITE_OPENROUTER_API_KEY }}
-
     - name: Setup Pages
-      if: github.ref == 'refs/heads/main'
       uses: actions/configure-pages@v4
 
     - name: Upload artifact
-      if: github.ref == 'refs/heads/main'
       uses: actions/upload-pages-artifact@v3
       with:
-        path: ./dist
+        path: '.'
 
     - name: Deploy to GitHub Pages
-      if: github.ref == 'refs/heads/main'
       id: deployment
       uses: actions/deploy-pages@v4

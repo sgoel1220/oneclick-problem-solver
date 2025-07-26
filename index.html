@@ -1,13 +1,451 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OneClick Problem Solver</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            min-height: 600px;
+        }
+
+        @media (max-width: 768px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        #videoContainer {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror front camera */
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            text-align: center;
+        }
+
+        .camera-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #answerDisplay {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #666;
+        }
+
+        .answer-content {
+            padding: 20px;
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 6px;
+            color: #2e7d32;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .error-content {
+            padding: 20px;
+            background: #ffebee;
+            border: 1px solid #f44336;
+            border-radius: 6px;
+            color: #c62828;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #007bff;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .camera-mode {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OneClick Problem Solver</h1>
+        
+        <div class="app-grid">
+            <!-- Answer Panel -->
+            <div class="card">
+                <h2>Answer</h2>
+                <div id="answerDisplay">
+                    Capture an image with a problem to get started
+                </div>
+            </div>
+
+            <!-- Camera Panel -->
+            <div class="card">
+                <h2>Camera</h2>
+                <div id="videoContainer">
+                    <video id="video" autoplay playsinline muted class="hidden"></video>
+                    <div id="videoOverlay" class="video-overlay">
+                        <div class="camera-icon">📷</div>
+                        <p>Click "Enable Camera" to start</p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="enableBtn" class="btn btn-primary">Enable Camera</button>
+                    <button id="captureBtn" class="btn btn-primary hidden">Capture & Solve</button>
+                    <button id="switchBtn" class="btn btn-secondary hidden">Switch Camera</button>
+                    <button id="stopBtn" class="btn btn-secondary hidden">Stop</button>
+                </div>
+                
+                <div id="cameraMode" class="camera-mode hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_KEY = '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';
+        const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+        // Global variables
+        let stream = null;
+        let currentFacingMode = 'user'; // 'user' for front, 'environment' for back
+
+        // DOM elements
+        const video = document.getElementById('video');
+        const videoOverlay = document.getElementById('videoOverlay');
+        const enableBtn = document.getElementById('enableBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const switchBtn = document.getElementById('switchBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const answerDisplay = document.getElementById('answerDisplay');
+        const cameraMode = document.getElementById('cameraMode');
+
+        // Enable camera
+        async function enableCamera() {
+            try {
+                enableBtn.disabled = true;
+                enableBtn.textContent = 'Starting...';
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: currentFacingMode }
+                });
+
+                video.srcObject = stream;
+                video.classList.remove('hidden');
+                videoOverlay.classList.add('hidden');
+
+                // Show controls
+                enableBtn.classList.add('hidden');
+                captureBtn.classList.remove('hidden');
+                switchBtn.classList.remove('hidden');
+                stopBtn.classList.remove('hidden');
+                cameraMode.classList.remove('hidden');
+
+                updateCameraMode();
+
+            } catch (error) {
+                console.error('Camera error:', error);
+                enableBtn.disabled = false;
+                enableBtn.textContent = 'Enable Camera';
+                showError('Camera access denied or not available');
+            }
+        }
+
+        // Switch camera
+        async function switchCamera() {
+            if (!stream) return;
+
+            try {
+                switchBtn.disabled = true;
+                
+                // Stop current stream
+                stream.getTracks().forEach(track => track.stop());
+                
+                // Switch facing mode
+                currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+                
+                // Start new stream
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: currentFacingMode }
+                });
+
+                video.srcObject = stream;
+                
+                // Update mirror effect
+                video.style.transform = currentFacingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
+                
+                updateCameraMode();
+                switchBtn.disabled = false;
+
+            } catch (error) {
+                console.error('Switch camera error:', error);
+                switchBtn.disabled = false;
+                showError('Failed to switch camera');
+            }
+        }
+
+        // Stop camera
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+
+            video.classList.add('hidden');
+            videoOverlay.classList.remove('hidden');
+            
+            enableBtn.classList.remove('hidden');
+            captureBtn.classList.add('hidden');
+            switchBtn.classList.add('hidden');
+            stopBtn.classList.add('hidden');
+            cameraMode.classList.add('hidden');
+
+            enableBtn.disabled = false;
+            enableBtn.textContent = 'Enable Camera';
+        }
+
+        // Update camera mode display
+        function updateCameraMode() {
+            cameraMode.textContent = currentFacingMode === 'user' ? '📱 Front Camera' : '📷 Back Camera';
+        }
+
+        // Capture image and solve
+        async function captureAndSolve() {
+            if (!stream) return;
+
+            try {
+                captureBtn.disabled = true;
+                showLoading();
+
+                // Create canvas and capture image
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                context.drawImage(video, 0, 0);
+                
+                // Convert to base64
+                const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                const base64Image = imageData.split(',')[1];
+
+                // Send to AI
+                const answer = await solveProblem(base64Image);
+                showAnswer(answer);
+
+            } catch (error) {
+                console.error('Solve error:', error);
+                showError(error.message || 'Failed to solve problem');
+            } finally {
+                captureBtn.disabled = false;
+            }
+        }
+
+        // Send image to OpenRouter API
+        async function solveProblem(base64Image) {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'deepseek/deepseek-chat-v3-0324:free',
+                    messages: [{
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'text',
+                                text: 'You will receive an image containing a problem statement (e.g. a math or logical question). Your task is to: 1. Read the problem from the image. 2. Solve it step by step. 3. Respond with only the **final answer** — no explanation, no context. Example format: "Answer: 42"'
+                            },
+                            {
+                                type: 'image_url',
+                                image_url: {
+                                    url: `data:image/jpeg;base64,${base64Image}`
+                                }
+                            }
+                        ]
+                    }],
+                    max_tokens: 300
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            const answer = data.choices?.[0]?.message?.content;
+
+            if (!answer) {
+                throw new Error('No answer received from AI');
+            }
+
+            return answer.trim();
+        }
+
+        // Display functions
+        function showLoading() {
+            answerDisplay.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Solving problem...</span>
+                </div>
+            `;
+        }
+
+        function showAnswer(answer) {
+            answerDisplay.innerHTML = `
+                <div class="answer-content">
+                    ${answer}
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            answerDisplay.innerHTML = `
+                <div class="error-content">
+                    ❌ ${message}
+                </div>
+            `;
+        }
+
+        // Event listeners
+        enableBtn.addEventListener('click', enableCamera);
+        captureBtn.addEventListener('click', captureAndSolve);
+        switchBtn.addEventListener('click', switchCamera);
+        stopBtn.addEventListener('click', stopCamera);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
 </html>
