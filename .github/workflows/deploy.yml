@@ -41,7 +41,7 @@ jobs:
     - name: Build
       run: |
         echo "Building with environment variables..."
-        echo "API Key present: $([ -n "$VITE_OPENROUTER_API_KEY" ] && echo "YES" || echo "NO")"
+        echo "API Key configured: $([ -n "$VITE_OPENROUTER_API_KEY" ] && echo "YES" || echo "NO")"
         npm run build
       env:
         VITE_OPENROUTER_API_KEY: ${{ secrets.VITE_OPENROUTER_API_KEY }}

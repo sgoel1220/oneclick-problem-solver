@@ -7,11 +7,18 @@ export default function DebugInfo() {
   const [showDebug, setShowDebug] = useState(false)
   
   const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY
-  const hasApiKey = !!apiKey
-  const apiKeyPreview = apiKey ? `${apiKey.slice(0, 10)}...${apiKey.slice(-4)}` : 'Not set'
+  const hasApiKey = !!apiKey && apiKey.length > 10
+  
+  // Never show actual key values, only status
+  const getKeyStatus = () => {
+    if (!apiKey) return '❌ Not Set'
+    if (apiKey.length < 10) return '⚠️ Invalid Format'
+    return '✅ Configured'
+  }
 
+  // Don't show debug info in production if everything is working
   if (import.meta.env.PROD && hasApiKey) {
-    return null // Don't show debug info in production if API key is properly set
+    return null
   }
 
   return (
@@ -40,14 +47,9 @@ export default function DebugInfo() {
               <strong>Environment:</strong> {import.meta.env.MODE}
             </div>
             <div>
-              <strong>API Key:</strong> {hasApiKey ? '✅ Set' : '❌ Missing'}
+              <strong>API Key:</strong> {getKeyStatus()}
             </div>
           </div>
-          {hasApiKey && (
-            <div>
-              <strong>Key Preview:</strong> <code className="bg-orange-100 px-1 rounded">{apiKeyPreview}</code>
-            </div>
-          )}
           {!hasApiKey && (
             <div className="p-2 bg-orange-100 rounded text-orange-800">
               <strong>Setup Instructions:</strong>
