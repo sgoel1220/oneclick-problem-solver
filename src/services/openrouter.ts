@@ -1,5 +1,10 @@
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || 'test-api-key'
+const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
+
+// Validate API key at module load
+if (!API_KEY || API_KEY === 'test-api-key') {
+  console.warn('⚠️ OpenRouter API key not found. Please set VITE_OPENROUTER_API_KEY environment variable.')
+}
 
 const PROBLEM_SOLVING_PROMPT = `You will receive an image containing a problem statement (e.g. a math or logical question). Your task is to:
 1. Read the problem from the image.
@@ -10,6 +15,11 @@ Example format:
 "Answer: 42"`
 
 export async function solveProblem(base64Image: string): Promise<string> {
+  // Check API key before making request
+  if (!API_KEY) {
+    throw new Error('OpenRouter API key not configured. Please set VITE_OPENROUTER_API_KEY environment variable.')
+  }
+
   try {
     const response = await fetch(OPENROUTER_API_URL, {
       method: 'POST',

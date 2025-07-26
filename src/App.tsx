@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Card } from './components/ui/card'
 import Camera from './components/Camera'
+import DebugInfo from './components/DebugInfo'
 import { solveProblem } from './services/openrouter'
 import { useImageCapture } from './hooks/useImageCapture'
 import { Loader2, AlertCircle } from 'lucide-react'
@@ -32,6 +33,10 @@ function App() {
     <div className="min-h-screen bg-background p-4">
       <div className="container mx-auto">
         <h1 className="text-3xl font-bold text-center mb-8">OneClick Problem Solver</h1>
+        
+        <div className="mb-6">
+          <DebugInfo />
+        </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[600px]">
           {/* Left Pane - Answer Display */}
