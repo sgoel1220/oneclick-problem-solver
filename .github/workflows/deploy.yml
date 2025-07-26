@@ -41,8 +41,11 @@ jobs:
     - name: Build
       run: |
         echo "Building with environment variables..."
+        echo "Repository: $GITHUB_REPOSITORY"
         echo "API Key configured: $([ -n "$VITE_OPENROUTER_API_KEY" ] && echo "YES" || echo "NO")"
         npm run build
+        echo "Build completed. Checking dist folder:"
+        ls -la dist/
       env:
         VITE_OPENROUTER_API_KEY: ${{ secrets.VITE_OPENROUTER_API_KEY }}
 
