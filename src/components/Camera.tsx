@@ -12,7 +12,7 @@ interface CameraProps {
 export default function Camera({ onCapture }: CameraProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const { stream, isLoading, error, hasPermission, startWebcam, stopWebcam } = useWebcam()
-  const { captureFromVideo, toBase64 } = useImageCapture()
+  const { captureFromVideo } = useImageCapture()
 
   useEffect(() => {
     if (stream && videoRef.current) {
